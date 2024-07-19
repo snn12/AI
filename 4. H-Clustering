@@ -1,0 +1,33 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import scipy.cluster.hierarchy as sch
+from sklearn.datasets import make_blobs
+
+# Veri oluşturma
+X_hierarchical, y_hierarchical = make_blobs(n_samples=300, centers=4, cluster_std=0.60, random_state=0)
+
+# Hiyerarşik Kümeleme algoritmasını uygulama
+linked = sch.linkage(X_hierarchical, method='ward')
+
+# Dendrogram oluşturma ve görselleştirme
+plt.figure(figsize=(10, 7))
+dendrogram = sch.dendrogram(linked)
+plt.title("Hierarchical Clustering Dendrogram")
+plt.xlabel("Sample Index")
+plt.ylabel("Distance")
+plt.show()
+
+# Küme sayısını belirleme ve kümeleme
+from sklearn.cluster import AgglomerativeClustering
+
+hc = AgglomerativeClustering(n_clusters=4, affinity='euclidean', linkage='ward')
+y_hc = hc.fit_predict(X_hierarchical)
+
+# Kümeleme sonuçlarını görselleştirme
+plt.figure(figsize=(8, 6))
+plt.scatter(X_hierarchical[:, 0], X_hierarchical[:, 1], c=y_hc, s=50, cmap='viridis')
+plt.title("Hierarchical Clustering")
+plt.xlabel("Feature 1")
+plt.ylabel("Feature 2")
+plt.show()
