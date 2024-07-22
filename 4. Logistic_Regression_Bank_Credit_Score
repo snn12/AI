@@ -1,0 +1,65 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+# Sentetik veri seti oluşturulması
+np.random.seed(0)
+n_samples = 1000
+X = np.random.randn(n_samples, 3)
+
+
+# İkili hedef değişken oluşturulması: 1 iyi kredi skoru, 0 kötü kredi skoru
+y = (X[:, 0] + 2*X[:, 1] - X[:, 2] > 1).astype(int) # daha iyi okuna bilir data
+
+# Veriyi eğitim ve test setlerine ayırma
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+# Modeli oluşturma ve eğitme
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Test seti üzerinde tahmin yapma
+y_pred = model.predict(X_test)
+
+# Model performansını değerlendirme
+classification_rep = classification_report(y_test, y_pred)
+conf_matrix = confusion_matrix(y_test, y_pred)
+accuracy = accuracy_score(y_test, y_pred)
+
+print("Sınıflandırma Raporu:\n", classification_rep)
+print("Karışıklık Matrisi:\n", conf_matrix)
+print("Doğruluk Skoru: ", accuracy)
+
+# Eğitim verisinin görselleştirilmesi
+plt.figure(figsize=(15, 7))
+plt.scatter(X_train[y_train == 0][:, 0], X_train[y_train == 0][:, 1], color='red', label='Kötü Kredi Skoru')
+plt.scatter(X_train[y_train == 1][:, 0], X_train[y_train == 1][:, 1], color='blue', label='İyi Kredi Skoru')
+plt.xlabel('Özellik 1')
+plt.ylabel('Özellik 2')
+plt.title('Eğitim Verisi')
+plt.legend()
+plt.show()
+
+
+# Test verisinin görselleştirilmesi
+plt.figure(figsize=(15, 7))
+plt.scatter(X_test[y_test == 0][:, 0], X_test[y_test == 0][:, 1], color='red', label='Kötü Kredi Skoru')
+plt.scatter(X_test[y_test == 1][:, 0], X_test[y_test == 1][:, 1], color='blue', label='İyi Kredi Skoru')
+plt.xlabel('Özellik 1')
+plt.ylabel('Özellik 2')
+plt.title('Test Verisi')
+plt.legend()
+plt.show()
+
+# Model tahminlerinin görselleştirilmesi
+plt.figure(figsize=(15, 7))
+plt.scatter(X_test[y_pred == 0][:, 0], X_test[y_pred == 0][:, 1], color='red', label='Tahmin Kötü Kredi Skoru')
+plt.scatter(X_test[y_pred == 1][:, 0], X_test[y_pred == 1][:, 1], color='blue', label='Tahmin İyi Kredi Skoru')
+plt.xlabel('Özellik 1')
+plt.ylabel('Özellik 2')
+plt.title('Model Tahminleri')
+plt.legend()
+plt.show()
