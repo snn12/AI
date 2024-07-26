@@ -1,0 +1,39 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_blobs
+from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import StandardScaler
+
+np.random.seed(0)
+n_samples = 1000
+coords = np.random.rand(n_samples,  2) * 100
+
+print(coords)
+
+scaler = StandardScaler() 
+scaled_coords = scaler.fit_transform (coords)
+
+print(scaled_coords)
+
+dbscan = DBSCAN( eps = 0.43, min_samples = 4)
+clusters = dbscan.fit_predict(scaled_coords)
+df = pd.DataFrame(coords, columns = [ 'x', 'y'])
+df['clusters'] = clusters
+plt.figure(figsize=(10,6))
+unique_clusters = np.unique(clusters)
+colors = [plt.cm.Spectral(each) for each in np.linspace( 0, 1, len(unique_clusters))]
+
+print(colors)
+
+print(clusters)for cluster, color in zip(unique_clusters, colors):
+    if cluster == -1:
+        color = [ 0, 0, 0, 1 ]
+    mask = (clusters == cluster)
+    plt.scatter(coords[mask, 0], coords[mask, 1], c=[color], label=f'Cluster {cluster}', s = 58)
+
+plt.title("DBSCAN"),
+plt.xlabel("X")
+plt.ylabel("Y"),
+plt.legend()
+plt.show()
