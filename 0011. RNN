@@ -27,6 +27,9 @@ X, y = generate_sine_wave_data(sequence_length, num_samples)
 data = pd.DataFrame(X)
 data['y'] = y
 
+# Tüm sütun adlarını string türüne dönüştürme
+data.columns = data.columns.astype(str)
+
 # Veriyi normalleştirme
 scaler = MinMaxScaler()
 data_scaled = scaler.fit_transform(data)
@@ -84,6 +87,10 @@ plt.show()
 X_random, y_random = generate_sine_wave_data(sequence_length, 10000)
 data_random = pd.DataFrame(X_random)
 data_random['y'] = y_random
+
+# Tüm sütun adlarını string türüne dönüştürme
+data_random.columns = data_random.columns.astype(str)
+
 data_random_scaled = scaler.transform(data_random)
 
 X_random_scaled = data_random_scaled[:, :-1]
