@@ -1,0 +1,110 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import SimpleRNN, Dense
+from tensorflow.keras.optimizers import Adam
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_absolute_error
+
+# Veriyi oluşturma
+def generate_sine_wave_data(seq_length, num_samples):
+    X = []
+    y = []
+    for _ in range(num_samples):
+        start = np.random.uniform(0, 2 * np.pi)
+        sine_wave = np.sin(np.linspace(start, start + seq_length * 0.1, seq_length))
+        X.append(sine_wave[:-1])
+        y.append(sine_wave[-1])
+    return np.array(X), np.array(y)
+
+sequence_length = 10
+num_samples = 1000
+X, y = generate_sine_wave_data(sequence_length, num_samples)
+
+# Veriyi pandas DataFrame'e dönüştürme
+data = pd.DataFrame(X)
+data['y'] = y
+
+# Veriyi normalleştirme
+scaler = MinMaxScaler()
+data_scaled = scaler.fit_transform(data)
+
+X_scaled = data_scaled[:, :-1]
+y_scaled = data_scaled[:, -1]
+
+# Eğitim ve test verilerini ayırma
+split_ratio = 0.8
+split_index = int(num_samples * split_ratio)
+X_train, X_test = X_scaled[:split_index], X_scaled[split_index:]
+y_train, y_test = y_scaled[:split_index], y_scaled[split_index:]
+
+# Veriyi uygun forma getirme
+X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
+X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], 1))
+
+# RNN modeli oluşturma
+model = Sequential()
+model.add(SimpleRNN(units=50, activation='relu', input_shape=(sequence_length - 1, 1)))
+model.add(Dense(units=1))
+
+# Modeli derleme
+model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
+
+# Modeli eğitme
+history = model.fit(X_train, y_train, epochs=20, batch_size=32, validation_data=(X_test, y_test))
+
+# Modeli değerlendirme
+loss = model.evaluate(X_test, y_test)
+print(f'Test Loss: {loss}')
+
+# Tahmin yapma
+y_pred = model.predict(X_test)
+
+# Tahminleri geri ölçekleme
+y_test_rescaled = scaler.inverse_transform(np.concatenate((X_test.squeeze(), y_test.reshape(-1, 1)), axis=1))[:, -1]
+y_pred_rescaled = scaler.inverse_transform(np.concatenate((X_test.squeeze(), y_pred), axis=1))[:, -1]
+
+# MAE hesaplama
+mae = mean_absolute_error(y_test_rescaled, y_pred_rescaled)
+print(f'Mean Absolute Error: {mae}')
+
+# Sonuçları çizme
+plt.figure(figsize=(12, 6))
+plt.plot(y_test_rescaled, label='Gerçek Değerler')
+plt.plot(y_pred_rescaled, label='Tahmin Edilen Değerler')
+plt.legend()
+plt.title('RNN Sinüs Dalgası Tahmini')
+plt.xlabel('Örnekler')
+plt.ylabel('Değer')
+plt.show()
+
+# Rastgele veri oluşturma
+X_random, y_random = generate_sine_wave_data(sequence_length, 10000)
+data_random = pd.DataFrame(X_random)
+data_random['y'] = y_random
+data_random_scaled = scaler.transform(data_random)
+
+X_random_scaled = data_random_scaled[:, :-1]
+y_random_scaled = data_random_scaled[:, -1]
+X_random_scaled = X_random_scaled.reshape((X_random_scaled.shape[0], X_random_scaled.shape[1], 1))
+
+# Rastgele veri ile tahmin yapma
+y_random_pred_scaled = model.predict(X_random_scaled)
+y_random_rescaled = scaler.inverse_transform(np.concatenate((X_random_scaled.squeeze(), y_random_scaled.reshape(-1, 1)), axis=1))[:, -1]
+y_random_pred_rescaled = scaler.inverse_transform(np.concatenate((X_random_scaled.squeeze(), y_random_pred_scaled), axis=1))[:, -1]
+
+# Rastgele veri için MAE hesaplama
+mae_random = mean_absolute_error(y_random_rescaled, y_random_pred_rescaled)
+print(f'Random Data Mean Absolute Error: {mae_random}')
+
+# Rastgele veri sonuçlarını çizme
+plt.figure(figsize=(12, 6))
+plt.plot(y_random_rescaled[:100], label='Gerçek Değerler')
+plt.plot(y_random_pred_rescaled[:100], label='Tahmin Edilen Değerler')
+plt.legend()
+plt.title('RNN Rastgele Veri Tahmini (İlk 100 Örnek)')
+plt.xlabel('Örnekler')
+plt.ylabel('Değer')
+plt.show()
